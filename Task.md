@@ -146,6 +146,8 @@ Each app will have its own `factories.py` file inside the `tests/` folder.
 
 * **PRs must NOT be raised when tests fail.**
 * All developers work strictly in feature branches.
+* All PRs must pass tests before merging.
+* Before raising PRs, get update from alpha branch.
 * All final merges require lead review.
 * All sensitive values must be in `.env`.
 * Requirements must be updated whenever packages change.
