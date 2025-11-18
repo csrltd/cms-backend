@@ -4,14 +4,12 @@ from base.responses import RepositoryResponse
 from blog.models import Category
 
 class CategoryRepository:
-    def create(self, name, description=None):
+    def create(self, data):
         try:
-            slug = slugify(name)
-            category = Category.objects.create(
-                name=name,
-                slug=slug,
-                description=description
-            )
+            if 'name' in data:
+                data['slug'] = slugify(data['name'])
+            
+            category = Category.objects.create(**data)
             return RepositoryResponse(
                 success=True,
                 message="Category created successfully",

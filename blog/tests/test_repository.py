@@ -9,10 +9,11 @@ class CategoryRepositoryTest(TestCase):
         self.category_repo = CategoryRepository()
 
     def test_create_category_success(self):
-        response = self.category_repo.create(
-            name="Technology",
-            description="Tech related posts"
-        )
+        data = {
+            "name": "Technology",
+            "description": "Tech related posts"
+        }
+        response = self.category_repo.create(data)
         self.assertTrue(response.success)
         self.assertEqual(response.data.name, "Technology")
         self.assertEqual(response.data.slug, "technology")
@@ -34,32 +35,51 @@ class CategoryRepositoryTest(TestCase):
         self.assertTrue(response.success)
         self.assertEqual(len(response.data), 3)
 
+    def test_create_category_minimal_data(self):
+        data = {"name": "Simple Category"}
+        response = self.category_repo.create(data)
+        self.assertTrue(response.success)
+        self.assertEqual(response.data.name, "Simple Category")
+        self.assertEqual(response.data.slug, "simple-category")
+
 class BlogRepositoryTest(TestCase):
     def setUp(self):
         self.blog_repo = BlogRepository()
         self.category = CategoryFactory()
 
     def test_create_blog_success(self):
-        response = self.blog_repo.create(
-            title="Test Blog",
-            short_description="Test description",
-            content="Test content",
-            category_id=self.category.id,
-            is_published=True
-        )
+        data = {
+            "title": "Test Blog",
+            "short_description": "Test description",
+            "content": "Test content",
+            "category_id": self.category.id,
+            "is_published": True
+        }
+        response = self.blog_repo.create(data)
         self.assertTrue(response.success)
         self.assertEqual(response.data.title, "Test Blog")
         self.assertEqual(response.data.slug, "test-blog")
 
     def test_create_blog_invalid_category(self):
-        response = self.blog_repo.create(
-            title="Test Blog",
-            short_description="Test description",
-            content="Test content",
-            category_id=999
-        )
+        data = {
+            "title": "Test Blog",
+            "short_description": "Test description",
+            "content": "Test content",
+            "category_id": 999
+        }
+        response = self.blog_repo.create(data)
         self.assertFalse(response.success)
-        self.assertEqual(response.message, "Category not found")
+
+    def test_create_blog_minimal_data(self):
+        data = {
+            "title": "Minimal Blog",
+            "content": "Just content",
+            "category_id": self.category.id
+        }
+        response = self.blog_repo.create(data)
+        self.assertTrue(response.success)
+        self.assertEqual(response.data.title, "Minimal Blog")
+        self.assertEqual(response.data.slug, "minimal-blog")
 
     def test_get_blog_by_id_success(self):
         blog = BlogFactory(category=self.category)

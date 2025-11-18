@@ -4,29 +4,24 @@ from base.responses import RepositoryResponse
 from blog.models import Blog, Category
 
 class BlogRepository:
-    def create(self, title, short_description, content, category_id, thumbnail=None, is_published=False):
+    def create(self, data):
         try:
-            category = Category.objects.get(id=category_id)
-            slug = slugify(title)
+            if 'title' in data:
+                data['slug'] = slugify(data['title'])
             
-            blog = Blog.objects.create(
-                title=title,
-                slug=slug,
-                short_description=short_description,
-                content=content,
-                category=category,
-                thumbnail=thumbnail,
-                is_published=is_published
-            )
+            # Validate category exists if category_id is provided
+            if 'category_id' in data:
+                if not Category.objects.filter(id=data['category_id']).exists():
+                    return RepositoryResponse(
+                        success=False,
+                        message="Category not found"
+                    )
+            
+            blog = Blog.objects.create(**data)
             return RepositoryResponse(
                 success=True,
                 message="Blog created successfully",
                 data=blog
-            )
-        except Category.DoesNotExist:
-            return RepositoryResponse(
-                success=False,
-                message="Category not found"
             )
         except Exception as e:
             logger.error(f"Error creating blog: {str(e)}")
