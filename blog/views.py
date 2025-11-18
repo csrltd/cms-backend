@@ -1,3 +1,111 @@
-from django.shortcuts import render
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from blog.service.blog_service import BlogService
+from blog.serializers import BlogSerializer, BlogListSerializer
 
-# Create your views here.
+
+@api_view(['GET', 'POST'])
+def blog_list_create(request):
+    service = BlogService()
+    if request.method == 'GET':
+        service_response = service.list_blogs()
+        if service_response.success:
+                serializer = BlogListSerializer(service_response.data, many=True)
+                return Response({
+                    'success': service_response.success,
+                    'message': service_response.message,
+                    'data': serializer.data
+                }, status=200)
+        return Response({
+                'success': service_response.success,
+                'message': service_response.message
+            }, status=service_response.status)
+        
+    elif request.method == 'POST':
+        if not request.user.is_authenticated:
+            return Response({
+                'success': False,
+                'message': 'Authentication required'
+            }, status=401)
+        
+        serializer = BlogSerializer(data=request.data)
+        if serializer.is_valid():
+            service_response = service.create_blog(serializer.validated_data)
+            if service_response.success:
+                response_serializer = BlogSerializer(service_response.data)
+                return Response({
+                    'success': service_response.success,
+                    'message': service_response.message,
+                    'data': response_serializer.data
+                }, status=service_response.status)
+            return Response({
+                'success': service_response.success,
+                'message': service_response.message
+            }, status=service_response.status)
+        
+        return Response({
+            'success': False,
+            'message': 'Invalid data',
+            'data': serializer.errors
+        }, status=400)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def blog_detail(request, pk):
+    service = BlogService()
+    if request.method == 'GET':
+        service_response = service.get_blog(pk)
+        if service_response.success:
+            serializer = BlogSerializer(service_response.data)
+            return Response({
+                'success': service_response.success,
+                'message': service_response.message,
+                'data': serializer.data
+            }, status=200)
+        return Response({
+            'success': service_response.success,
+            'message': service_response.message
+        }, status=service_response.status)
+    
+    elif request.method == 'PUT':
+        if not request.user.is_authenticated:
+            return Response({
+                'success': False,
+                'message': 'Authentication required'
+            }, status=401)
+        
+        serializer = BlogSerializer(data=request.data)
+        if serializer.is_valid():
+            service_response = service.update_blog(pk, serializer.validated_data)
+            if service_response.success:
+                response_serializer = BlogSerializer(service_response.data)
+                return Response({
+                    'success': service_response.success,
+                    'message': service_response.message,
+                    'data': response_serializer.data
+                }, status=200)
+            return Response({
+                'success': service_response.success,
+                'message': service_response.message
+            }, status=service_response.status)
+        
+        return Response({
+            'success': False,
+            'message': 'Invalid data',
+            'data': serializer.errors
+        }, status=400)
+    
+    elif request.method == 'DELETE':
+        if not request.user.is_authenticated:
+            return Response({
+                'success': False,
+                'message': 'Authentication required'
+            }, status=401)
+        
+        service_response = service.delete_blog(pk)
+        return Response({
+            'success': service_response.success,
+            'message': service_response.message
+        }, status=service_response.status)
+
+
