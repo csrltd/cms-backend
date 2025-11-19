@@ -30,9 +30,9 @@ class BlogRepository:
                 message=f"Failed to create blog: {str(e)}"
             )
 
-    def get_by_id(self, blog_id):
+    def get_by_slug(self, slug):
         try:
-            blog = Blog.objects.select_related('category').get(id=blog_id)
+            blog = Blog.objects.select_related('category').get(slug=slug)
             return RepositoryResponse(
                 success=True,
                 message="Blog retrieved successfully",
@@ -44,17 +44,28 @@ class BlogRepository:
                 message="Blog not found"
             )
         except Exception as e:
-            logger.error(f"Error retrieving blog {blog_id}: {str(e)}")
+            logger.error(f"Error retrieving blog {slug}: {str(e)}")
             return RepositoryResponse(
                 success=False,
                 message=f"Failed to retrieve blog: {str(e)}"
             )
 
-    def list_all(self, published_only=False):
+    def list_all(self, published_only=False, category_slug=None, date_from=None, date_to=None):
         try:
             queryset = Blog.objects.select_related('category')
+            
             if published_only:
                 queryset = queryset.filter(is_published=True)
+                
+            if category_slug:
+                queryset = queryset.filter(category__slug=category_slug)
+                
+            if date_from:
+                queryset = queryset.filter(created_at__gte=date_from)
+                
+            if date_to:
+                queryset = queryset.filter(created_at__lte=date_to)
+                
             blogs = queryset.order_by('-created_at')
             return RepositoryResponse(
                 success=True,
@@ -68,9 +79,9 @@ class BlogRepository:
                 message=f"Failed to list blogs: {str(e)}"
             )
 
-    def update(self, blog_id, **kwargs):
+    def update_by_slug(self, slug, **kwargs):
         try:
-            blog = Blog.objects.get(id=blog_id)
+            blog = Blog.objects.get(slug=slug)
             
             if 'title' in kwargs:
                 blog.title = kwargs['title']
@@ -92,15 +103,15 @@ class BlogRepository:
                 message="Blog not found"
             )
         except Exception as e:
-            logger.error(f"Error updating blog {blog_id}: {str(e)}")
+            logger.error(f"Error updating blog {slug}: {str(e)}")
             return RepositoryResponse(
                 success=False,
                 message=f"Failed to update blog: {str(e)}"
             )
 
-    def delete(self, blog_id):
+    def delete_by_slug(self, slug):
         try:
-            blog = Blog.objects.get(id=blog_id)
+            blog = Blog.objects.get(slug=slug)
             blog.delete()
             return RepositoryResponse(
                 success=True,
@@ -112,7 +123,7 @@ class BlogRepository:
                 message="Blog not found"
             )
         except Exception as e:
-            logger.error(f"Error deleting blog {blog_id}: {str(e)}")
+            logger.error(f"Error deleting blog {slug}: {str(e)}")
             return RepositoryResponse(
                 success=False,
                 message=f"Failed to delete blog: {str(e)}"

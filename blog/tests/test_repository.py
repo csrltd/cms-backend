@@ -81,14 +81,14 @@ class BlogRepositoryTest(TestCase):
         self.assertEqual(response.data.title, "Minimal Blog")
         self.assertEqual(response.data.slug, "minimal-blog")
 
-    def test_get_blog_by_id_success(self):
+    def test_get_blog_by_slug_success(self):
         blog = BlogFactory(category=self.category)
-        response = self.blog_repo.get_by_id(blog.id)
+        response = self.blog_repo.get_by_slug(blog.slug)
         self.assertTrue(response.success)
-        self.assertEqual(response.data.id, blog.id)
+        self.assertEqual(response.data.slug, blog.slug)
 
-    def test_get_blog_by_id_not_found(self):
-        response = self.blog_repo.get_by_id(999)
+    def test_get_blog_by_slug_not_found(self):
+        response = self.blog_repo.get_by_slug('non-existent-slug')
         self.assertFalse(response.success)
         self.assertEqual(response.message, "Blog not found")
 
@@ -105,10 +105,10 @@ class BlogRepositoryTest(TestCase):
         self.assertTrue(response.success)
         self.assertEqual(len(response.data), 1)
 
-    def test_update_blog_success(self):
+    def test_update_blog_by_slug_success(self):
         blog = BlogFactory(category=self.category)
-        response = self.blog_repo.update(
-            blog.id,
+        response = self.blog_repo.update_by_slug(
+            blog.slug,
             title="Updated Title",
             is_published=True
         )
@@ -116,18 +116,65 @@ class BlogRepositoryTest(TestCase):
         self.assertEqual(response.data.title, "Updated Title")
         self.assertEqual(response.data.slug, "updated-title")
 
-    def test_update_blog_not_found(self):
-        response = self.blog_repo.update(999, title="Updated")
+    def test_update_blog_by_slug_not_found(self):
+        response = self.blog_repo.update_by_slug('non-existent-slug', title="Updated")
         self.assertFalse(response.success)
         self.assertEqual(response.message, "Blog not found")
 
-    def test_delete_blog_success(self):
+    def test_delete_blog_by_slug_success(self):
         blog = BlogFactory(category=self.category)
-        response = self.blog_repo.delete(blog.id)
+        response = self.blog_repo.delete_by_slug(blog.slug)
         self.assertTrue(response.success)
-        self.assertFalse(Blog.objects.filter(id=blog.id).exists())
+        self.assertFalse(Blog.objects.filter(slug=blog.slug).exists())
 
-    def test_delete_blog_not_found(self):
-        response = self.blog_repo.delete(999)
+    def test_delete_blog_by_slug_not_found(self):
+        response = self.blog_repo.delete_by_slug('non-existent-slug')
         self.assertFalse(response.success)
         self.assertEqual(response.message, "Blog not found")
+
+    def test_list_blogs_filter_by_category(self):
+        tech_category = CategoryFactory(slug="technology")
+        health_category = CategoryFactory(slug="health")
+        BlogFactory.create_batch(2, category=tech_category, is_published=True)
+        BlogFactory(category=health_category, is_published=True)
+        
+        response = self.blog_repo.list_all(published_only=True, category_slug="technology")
+        self.assertTrue(response.success)
+        self.assertEqual(len(response.data), 2)
+
+    def test_list_blogs_filter_by_date_from(self):
+        from datetime import datetime, timedelta
+        old_blog = BlogFactory(category=self.category, is_published=True)
+        old_blog.created_at = datetime.now() - timedelta(days=10)
+        old_blog.save()
+        
+        new_blog = BlogFactory(category=self.category, is_published=True)
+        
+        date_filter = datetime.now() - timedelta(days=5)
+        response = self.blog_repo.list_all(published_only=True, date_from=date_filter)
+        self.assertTrue(response.success)
+        self.assertEqual(len(response.data), 1)
+
+    def test_list_blogs_combined_filters(self):
+        from datetime import datetime, timedelta
+        tech_category = CategoryFactory(slug="technology")
+        health_category = CategoryFactory(slug="health")
+        
+        # Old tech blog
+        old_tech = BlogFactory(category=tech_category, is_published=True)
+        old_tech.created_at = datetime.now() - timedelta(days=10)
+        old_tech.save()
+        
+        # New tech blog
+        BlogFactory(category=tech_category, is_published=True)
+        # New health blog
+        BlogFactory(category=health_category, is_published=True)
+        
+        date_filter = datetime.now() - timedelta(days=5)
+        response = self.blog_repo.list_all(
+            published_only=True,
+            category_slug="technology",
+            date_from=date_filter
+        )
+        self.assertTrue(response.success)
+        self.assertEqual(len(response.data), 1)

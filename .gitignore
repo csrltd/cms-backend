@@ -61,6 +61,8 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+media/
+logs/
 
 # Flask stuff:
 instance/
@@ -208,3 +210,8 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Postman collection files
+postman/
+*.postman_collection.json
+*.postman_environment.json
