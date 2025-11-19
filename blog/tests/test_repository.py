@@ -81,14 +81,14 @@ class BlogRepositoryTest(TestCase):
         self.assertEqual(response.data.title, "Minimal Blog")
         self.assertEqual(response.data.slug, "minimal-blog")
 
-    def test_get_blog_by_id_success(self):
+    def test_get_blog_by_slug_success(self):
         blog = BlogFactory(category=self.category)
-        response = self.blog_repo.get_by_id(blog.id)
+        response = self.blog_repo.get_by_slug(blog.slug)
         self.assertTrue(response.success)
-        self.assertEqual(response.data.id, blog.id)
+        self.assertEqual(response.data.slug, blog.slug)
 
-    def test_get_blog_by_id_not_found(self):
-        response = self.blog_repo.get_by_id(999)
+    def test_get_blog_by_slug_not_found(self):
+        response = self.blog_repo.get_by_slug('non-existent-slug')
         self.assertFalse(response.success)
         self.assertEqual(response.message, "Blog not found")
 
@@ -105,10 +105,10 @@ class BlogRepositoryTest(TestCase):
         self.assertTrue(response.success)
         self.assertEqual(len(response.data), 1)
 
-    def test_update_blog_success(self):
+    def test_update_blog_by_slug_success(self):
         blog = BlogFactory(category=self.category)
-        response = self.blog_repo.update(
-            blog.id,
+        response = self.blog_repo.update_by_slug(
+            blog.slug,
             title="Updated Title",
             is_published=True
         )
@@ -116,18 +116,18 @@ class BlogRepositoryTest(TestCase):
         self.assertEqual(response.data.title, "Updated Title")
         self.assertEqual(response.data.slug, "updated-title")
 
-    def test_update_blog_not_found(self):
-        response = self.blog_repo.update(999, title="Updated")
+    def test_update_blog_by_slug_not_found(self):
+        response = self.blog_repo.update_by_slug('non-existent-slug', title="Updated")
         self.assertFalse(response.success)
         self.assertEqual(response.message, "Blog not found")
 
-    def test_delete_blog_success(self):
+    def test_delete_blog_by_slug_success(self):
         blog = BlogFactory(category=self.category)
-        response = self.blog_repo.delete(blog.id)
+        response = self.blog_repo.delete_by_slug(blog.slug)
         self.assertTrue(response.success)
-        self.assertFalse(Blog.objects.filter(id=blog.id).exists())
+        self.assertFalse(Blog.objects.filter(slug=blog.slug).exists())
 
-    def test_delete_blog_not_found(self):
-        response = self.blog_repo.delete(999)
+    def test_delete_blog_by_slug_not_found(self):
+        response = self.blog_repo.delete_by_slug('non-existent-slug')
         self.assertFalse(response.success)
         self.assertEqual(response.message, "Blog not found")
