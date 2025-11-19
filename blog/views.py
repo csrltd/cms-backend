@@ -51,10 +51,10 @@ def blog_list_create(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-def blog_detail(request, pk):
+def blog_detail(request, slug):
     service = BlogService()
     if request.method == 'GET':
-        service_response = service.get_blog(pk)
+        service_response = service.get_blog(slug)
         if service_response.success:
             serializer = BlogSerializer(service_response.data)
             return Response({
@@ -76,7 +76,7 @@ def blog_detail(request, pk):
         
         serializer = BlogSerializer(data=request.data)
         if serializer.is_valid():
-            service_response = service.update_blog(pk, serializer.validated_data)
+            service_response = service.update_blog(slug, serializer.validated_data)
             if service_response.success:
                 response_serializer = BlogSerializer(service_response.data)
                 return Response({
@@ -102,7 +102,7 @@ def blog_detail(request, pk):
                 'message': 'Authentication required'
             }, status=401)
         
-        service_response = service.delete_blog(pk)
+        service_response = service.delete_blog(slug)
         return Response({
             'success': service_response.success,
             'message': service_response.message
