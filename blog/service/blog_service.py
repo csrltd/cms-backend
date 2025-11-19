@@ -40,9 +40,14 @@ class BlogService:
             logger.error(f"Error deleting blog {slug}: {str(e)}")
             return APIResponse(False, "Failed to delete blog", status=500)
 
-    def list_blogs(self):
+    def list_blogs(self, category_slug=None, date_from=None, date_to=None):
         try:
-            repo_response = self.repository.list_all(published_only=True)
+            repo_response = self.repository.list_all(
+                published_only=True,
+                category_slug=category_slug,
+                date_from=date_from,
+                date_to=date_to
+            )
             if not repo_response.success:
                 return APIResponse(False, repo_response.message, status=500)
             

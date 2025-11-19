@@ -50,11 +50,22 @@ class BlogRepository:
                 message=f"Failed to retrieve blog: {str(e)}"
             )
 
-    def list_all(self, published_only=False):
+    def list_all(self, published_only=False, category_slug=None, date_from=None, date_to=None):
         try:
             queryset = Blog.objects.select_related('category')
+            
             if published_only:
                 queryset = queryset.filter(is_published=True)
+                
+            if category_slug:
+                queryset = queryset.filter(category__slug=category_slug)
+                
+            if date_from:
+                queryset = queryset.filter(created_at__gte=date_from)
+                
+            if date_to:
+                queryset = queryset.filter(created_at__lte=date_to)
+                
             blogs = queryset.order_by('-created_at')
             return RepositoryResponse(
                 success=True,

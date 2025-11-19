@@ -131,3 +131,50 @@ class BlogRepositoryTest(TestCase):
         response = self.blog_repo.delete_by_slug('non-existent-slug')
         self.assertFalse(response.success)
         self.assertEqual(response.message, "Blog not found")
+
+    def test_list_blogs_filter_by_category(self):
+        tech_category = CategoryFactory(slug="technology")
+        health_category = CategoryFactory(slug="health")
+        BlogFactory.create_batch(2, category=tech_category, is_published=True)
+        BlogFactory(category=health_category, is_published=True)
+        
+        response = self.blog_repo.list_all(published_only=True, category_slug="technology")
+        self.assertTrue(response.success)
+        self.assertEqual(len(response.data), 2)
+
+    def test_list_blogs_filter_by_date_from(self):
+        from datetime import datetime, timedelta
+        old_blog = BlogFactory(category=self.category, is_published=True)
+        old_blog.created_at = datetime.now() - timedelta(days=10)
+        old_blog.save()
+        
+        new_blog = BlogFactory(category=self.category, is_published=True)
+        
+        date_filter = datetime.now() - timedelta(days=5)
+        response = self.blog_repo.list_all(published_only=True, date_from=date_filter)
+        self.assertTrue(response.success)
+        self.assertEqual(len(response.data), 1)
+
+    def test_list_blogs_combined_filters(self):
+        from datetime import datetime, timedelta
+        tech_category = CategoryFactory(slug="technology")
+        health_category = CategoryFactory(slug="health")
+        
+        # Old tech blog
+        old_tech = BlogFactory(category=tech_category, is_published=True)
+        old_tech.created_at = datetime.now() - timedelta(days=10)
+        old_tech.save()
+        
+        # New tech blog
+        BlogFactory(category=tech_category, is_published=True)
+        # New health blog
+        BlogFactory(category=health_category, is_published=True)
+        
+        date_filter = datetime.now() - timedelta(days=5)
+        response = self.blog_repo.list_all(
+            published_only=True,
+            category_slug="technology",
+            date_from=date_filter
+        )
+        self.assertTrue(response.success)
+        self.assertEqual(len(response.data), 1)

@@ -86,3 +86,54 @@ class TestBlogService(unittest.TestCase):
         
         self.assertTrue(result.success)
         self.assertEqual(result.data, blog_data)
+
+    def test_list_blogs_with_category_filter(self):
+        blog_data = [BlogFactory.build()]
+        self.service.repository.list_all.return_value = RepositoryResponse(
+            True, "Blogs retrieved", blog_data
+        )
+        
+        result = self.service.list_blogs(category_slug="technology")
+        
+        self.assertTrue(result.success)
+        self.service.repository.list_all.assert_called_once_with(
+            published_only=True,
+            category_slug="technology",
+            date_from=None,
+            date_to=None
+        )
+
+    def test_list_blogs_with_date_filters(self):
+        from datetime import datetime
+        blog_data = [BlogFactory.build()]
+        self.service.repository.list_all.return_value = RepositoryResponse(
+            True, "Blogs retrieved", blog_data
+        )
+        
+        date_from = datetime(2024, 1, 1)
+        date_to = datetime(2024, 12, 31)
+        result = self.service.list_blogs(date_from=date_from, date_to=date_to)
+        
+        self.assertTrue(result.success)
+        self.service.repository.list_all.assert_called_once_with(
+            published_only=True,
+            category_slug=None,
+            date_from=date_from,
+            date_to=date_to
+        )
+
+    def test_list_blogs_backward_compatibility(self):
+        blog_data = [BlogFactory.build()]
+        self.service.repository.list_all.return_value = RepositoryResponse(
+            True, "Blogs retrieved", blog_data
+        )
+        
+        result = self.service.list_blogs()
+        
+        self.assertTrue(result.success)
+        self.service.repository.list_all.assert_called_once_with(
+            published_only=True,
+            category_slug=None,
+            date_from=None,
+            date_to=None
+        )
