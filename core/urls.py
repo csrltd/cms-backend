@@ -20,5 +20,6 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls.blog')),
+    path('api/', include('api.urls.contact')),
     path('ckeditor5/', include('django_ckeditor_5.urls')),
 ]
