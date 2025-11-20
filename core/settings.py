@@ -174,3 +174,8 @@ CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://127.0.0
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+
+# Postmark Email Configuration
+POSTMARK_API_KEY = config('POSTMARK_API_KEY', default='')
+ADMIN_EMAIL = config('ADMIN_EMAIL', default='admin@yourdomain.com')
+FROM_EMAIL = config('FROM_EMAIL', default='noreply@yourdomain.com')
