@@ -1,4 +1,5 @@
 from django.utils.text import slugify
+from django.core.cache import cache
 from loguru import logger
 from base.responses import RepositoryResponse
 from blog.models import Blog, Category
@@ -32,7 +33,28 @@ class BlogRepository:
 
     def get_by_slug(self, slug):
         try:
+            # Check cache first (fail gracefully if Redis down)
+            try:
+                cache_key = f'blog:{slug}'
+                cached_blog = cache.get(cache_key)
+                if cached_blog:
+                    return RepositoryResponse(
+                        success=True,
+                        message="Blog retrieved successfully",
+                        data=cached_blog
+                    )
+            except Exception:
+                pass  # Continue without cache
+            
+            # Get from database
             blog = Blog.objects.select_related('category').get(slug=slug)
+            
+            # Try to cache (fail gracefully)
+            try:
+                cache.set(cache_key, blog, timeout=1800)
+            except Exception:
+                pass  # Continue without caching
+            
             return RepositoryResponse(
                 success=True,
                 message="Blog retrieved successfully",
@@ -52,6 +74,20 @@ class BlogRepository:
 
     def list_all(self, published_only=False, category_slug=None, date_from=None, date_to=None):
         try:
+            # Only cache simple published blog list (fail gracefully if Redis down)
+            if published_only and not category_slug and not date_from and not date_to:
+                try:
+                    cache_key = 'blogs:published'
+                    cached_blogs = cache.get(cache_key)
+                    if cached_blogs:
+                        return RepositoryResponse(
+                            success=True,
+                            message="Blogs retrieved successfully",
+                            data=cached_blogs
+                        )
+                except Exception:
+                    pass  # Continue without cache
+            
             queryset = Blog.objects.select_related('category')
             
             if published_only:
@@ -67,6 +103,14 @@ class BlogRepository:
                 queryset = queryset.filter(created_at__lte=date_to)
                 
             blogs = queryset.order_by('-created_at')
+            
+            # Try to cache (fail gracefully)
+            if published_only and not category_slug and not date_from and not date_to:
+                try:
+                    cache.set('blogs:published', blogs, timeout=900)
+                except Exception:
+                    pass  # Continue without caching
+            
             return RepositoryResponse(
                 success=True,
                 message="Blogs retrieved successfully",

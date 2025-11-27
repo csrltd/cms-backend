@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from loguru import logger
 from base.responses import APIResponse
 from blog.repository.blog_repository import BlogRepository
@@ -13,6 +14,12 @@ class BlogService:
             if not repo_response.success:
                 return APIResponse(False, repo_response.message, status=400)
             
+            # Clear blog list cache (fail gracefully)
+            try:
+                cache.delete('blogs:published')
+            except Exception:
+                pass
+            
             return APIResponse(True, "Blog created successfully", repo_response.data, 201)
         except Exception as e:
             logger.error(f"Error creating blog: {str(e)}")
@@ -24,6 +31,13 @@ class BlogService:
             if not repo_response.success:
                 return APIResponse(False, repo_response.message, status=400)
             
+            # Clear caches (fail gracefully)
+            try:
+                cache.delete('blogs:published')
+                cache.delete(f'blog:{slug}')
+            except Exception:
+                pass
+            
             return APIResponse(True, "Blog updated successfully", repo_response.data)
         except Exception as e:
             logger.error(f"Error updating blog {slug}: {str(e)}")
@@ -34,6 +48,13 @@ class BlogService:
             repo_response = self.repository.delete_by_slug(slug)
             if not repo_response.success:
                 return APIResponse(False, repo_response.message, status=404)
+            
+            # Clear caches (fail gracefully)
+            try:
+                cache.delete('blogs:published')
+                cache.delete(f'blog:{slug}')
+            except Exception:
+                pass
             
             return APIResponse(True, "Blog deleted successfully", status=204)
         except Exception as e:

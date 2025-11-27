@@ -1,4 +1,5 @@
 from django.utils.text import slugify
+from django.core.cache import cache
 from loguru import logger
 from base.responses import RepositoryResponse
 from blog.models import Category
@@ -44,7 +45,28 @@ class CategoryRepository:
 
     def list_all(self):
         try:
+            # Check cache first (fail gracefully if Redis down)
+            try:
+                cache_key = 'categories:all'
+                cached_categories = cache.get(cache_key)
+                if cached_categories:
+                    return RepositoryResponse(
+                        success=True,
+                        message="Categories retrieved successfully",
+                        data=cached_categories
+                    )
+            except Exception:
+                pass  # Continue without cache
+            
+            # Get from database
             categories = Category.objects.all().order_by('name')
+            
+            # Try to cache (fail gracefully)
+            try:
+                cache.set(cache_key, categories, timeout=3600)
+            except Exception:
+                pass  # Continue without caching
+            
             return RepositoryResponse(
                 success=True,
                 message="Categories retrieved successfully",

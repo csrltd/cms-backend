@@ -1,7 +1,8 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from blog.service.blog_service import BlogService
-from blog.serializers import BlogSerializer, BlogListSerializer
+from blog.serializers import BlogSerializer, BlogListSerializer, CategorySerializer
+from blog.models import Category
 
 
 @api_view(['GET', 'POST'])
@@ -102,5 +103,33 @@ def blog_detail(request, slug):
             'success': service_response.success,
             'message': service_response.message
         }, status=service_response.status)
+
+
+@api_view(['GET'])
+def category_list(request):
+    """List all categories"""
+    categories = Category.objects.all().order_by('name')
+    serializer = CategorySerializer(categories, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def category_detail(request, slug):
+    """Get category details with its blogs"""
+    try:
+        category = Category.objects.get(slug=slug)
+        category_data = CategorySerializer(category).data
+        
+        # Get published blogs in this category
+        blogs = category.blogs.filter(is_published=True).order_by('-created_at')
+        blogs_data = BlogListSerializer(blogs, many=True).data
+        
+        return Response({
+            'category': category_data,
+            'blogs': blogs_data,
+            'blog_count': len(blogs_data)
+        })
+    except Category.DoesNotExist:
+        return Response({'error': 'Category not found'}, status=404)
 
 

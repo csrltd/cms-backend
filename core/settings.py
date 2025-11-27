@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import sys
 from pathlib import Path
 from decouple import config
 from loguru import logger
@@ -39,8 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'storages',
     'django_ckeditor_5',
     'rest_framework',
+    'drf_spectacular',
     'base',
     'api',
     'blog',
@@ -123,13 +125,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Cloudflare R2 Configuration
+# Cloudflare R2 Storage Configuration
 USE_CLOUDFLARE = config('USE_CLOUDFLARE', default=False, cast=bool)
 
 if USE_CLOUDFLARE:
@@ -137,13 +140,28 @@ if USE_CLOUDFLARE:
     AWS_SECRET_ACCESS_KEY = config('CLOUDFLARE_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = config('CLOUDFLARE_BUCKET_NAME')
     AWS_S3_ENDPOINT_URL = config('CLOUDFLARE_ENDPOINT_URL')
-    AWS_S3_REGION_NAME = 'auto'
     AWS_DEFAULT_ACL = None
     AWS_S3_FILE_OVERWRITE = False
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
     
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/media/'
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
+    MEDIA_URL = config('CLOUDFLARE_PUBLIC_URL') + "/"
 else:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -157,16 +175,39 @@ CKEDITOR_5_CONFIGS = {
 
 logger.add("logs/app.log", rotation="1 MB", retention="7 days", level="ERROR")
 
+# Django REST Framework Configuration
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# Spectacular (Swagger) Configuration
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'CMS Backend API',
+    'DESCRIPTION': 'A comprehensive Content Management System API built with Django REST Framework',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+}
+
 # Redis Cache Configuration
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': config('REDIS_URL', default='redis://127.0.0.1:6379/1'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+
+if 'test' in sys.argv:
+    # Use dummy cache for testing
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
         }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': config('REDIS_URL', default='redis://127.0.0.1:6379/1'),
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            }
+        }
+    }
 
 # Celery Configuration
 CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://127.0.0.1:6379/0')
