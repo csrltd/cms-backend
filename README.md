@@ -1,37 +1,34 @@
-# 🚀 CMS Backend API
+# CMS Backend API
 
-A modern, scalable Content Management System API built with Django REST Framework, featuring a clean layered architecture, comprehensive testing, and production-ready configurations.
+A scalable Content Management System API built with Django REST Framework, featuring layered architecture, comprehensive testing, and production-ready configurations.
 
-## ✨ Features
+## Features
 
-- **📝 Blog Management** - Full CRUD operations with rich text content
-- **📂 Category System** - Organize content with hierarchical categories
-- **📧 Contact Forms** - Handle inquiries with email notifications
-- **🖼️ Media Handling** - Local development + Cloudflare R2 production storage
-- **🔍 Advanced Filtering** - Filter blogs by category, date range
-- **📱 RESTful API** - Clean, consistent API design
-- **🧪 Comprehensive Testing** - 34+ tests with Factory Boy
-- **📚 API Documentation** - Interactive Swagger/OpenAPI docs
-- **⚡ Performance** - Redis caching, optimized queries
-- **🔧 Background Tasks** - Celery for email processing
+- Blog Management - Full CRUD operations with rich text content
+- Category System - Hierarchical content organization
+- Contact Forms - Inquiry handling with email notifications
+- Media Storage - Local development and Cloudflare R2 production storage
+- Advanced Filtering - Filter content by category and date range
+- RESTful API - Consistent API design patterns
+- Comprehensive Testing - 34+ tests with Factory Boy
+- API Documentation - Interactive Swagger/OpenAPI documentation
+- Performance Optimization - Redis caching and query optimization
+- Background Tasks - Celery for asynchronous email processing
 
-## 🏗️ Architecture
+## Architecture
+
+The application follows a clean layered architecture pattern:
 
 ```
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│    Views    │───▶│  Services   │───▶│ Repositories│───▶│   Models    │
-│ (API Layer) │    │(Business    │    │(Data Access)│    │ (Database)  │
-│             │    │ Logic)      │    │             │    │             │
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+Views → Services → Repositories → Models
 ```
 
-### Clean Layered Architecture
-- **Views**: Handle HTTP requests/responses
+- **Views**: Handle HTTP requests and responses
 - **Services**: Business logic and validation
-- **Repositories**: Database operations
+- **Repositories**: Data access layer
 - **Models**: Data structure and relationships
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Python 3.11+
@@ -62,12 +59,12 @@ uv run python setup_test_data.py
 uv run python manage.py runserver
 ```
 
-### 🌐 Access Points
+### Access Points
 - **API Base**: http://127.0.0.1:8000/api/
 - **Admin Panel**: http://127.0.0.1:8000/admin/ (admin/admin123)
 - **API Documentation**: http://127.0.0.1:8000/api/docs/
 
-## 📡 API Endpoints
+## API Endpoints
 
 ### Blog Management
 ```
@@ -97,7 +94,7 @@ GET    /api/docs/                     # Interactive Swagger UI
 GET    /api/schema/                   # OpenAPI schema
 ```
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run all tests
@@ -110,7 +107,8 @@ uv run python manage.py test contact.tests
 # Check code coverage
 uv run python manage.py test --with-coverage
 ```
-## 🏭 Production Deployment
+
+## Production Deployment
 
 ### Media Storage
 - **Development**: Local file storage
@@ -126,12 +124,12 @@ celery -A core beat --loglevel=info
 ```
 
 ### Performance Features
-- **Redis Caching**: Blog list caching
-- **Query Optimization**: `select_related()` for relationships
-- **CDN Integration**: Cloudflare for media delivery
-- **Background Processing**: Email sending via Celery
+- Redis caching for blog list
+- Query optimization with select_related()
+- CDN integration via Cloudflare
+- Background email processing with Celery
 
-## 📊 Project Structure
+## Project Structure
 
 ```
 cms-backend/
@@ -160,12 +158,13 @@ cms-backend/
 └── requirements.txt        # Python dependencies
 ```
 
-### Code Quality
-- **Logging**: Structured logging with Loguru
-- **Error Handling**: Comprehensive try/catch blocks
-- **Type Hints**: Python typing for better IDE support
-- **Documentation**: Inline docstrings and API docs
+## Code Quality
 
-## 👥 Team
+- Structured logging with Loguru
+- Comprehensive error handling
+- Python type hints for IDE support
+- Inline documentation and API docs
 
-**Development Team**: Tuombe • Paccy • Christian
+## Development Team
+
+Tuombe • Paccy • Christian
