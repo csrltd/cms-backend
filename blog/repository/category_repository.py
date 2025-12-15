@@ -11,6 +11,14 @@ class CategoryRepository:
                 data['slug'] = slugify(data['name'])
             
             category = Category.objects.create(**data)
+            
+            # Clear categories cache
+            try:
+                cache.delete('categories:all')
+                logger.info("Cleared categories cache after creation")
+            except Exception:
+                pass
+            
             return RepositoryResponse(
                 success=True,
                 message="Category created successfully",
@@ -52,20 +60,21 @@ class CategoryRepository:
                 if cached_categories:
                     return RepositoryResponse(
                         success=True,
-                        message="Categories retrieved successfully",
+                        message="Categories retrieved successfully (cached)",
                         data=cached_categories
                     )
             except Exception:
                 pass  # Continue without cache
             
             # Get from database
-            categories = Category.objects.all().order_by('name')
+            categories = list(Category.objects.all().order_by('name'))
             
-            # Try to cache (fail gracefully)
+            # Try to cache (fail gracefully) - convert to list for caching
             try:
-                cache.set(cache_key, categories, timeout=3600)
-            except Exception:
-                pass  # Continue without caching
+                cache.set(cache_key, categories, timeout=3600)  # 1 hour cache
+                logger.info(f"Cached {len(categories)} categories")
+            except Exception as e:
+                logger.warning(f"Failed to cache categories: {str(e)}")
             
             return RepositoryResponse(
                 success=True,

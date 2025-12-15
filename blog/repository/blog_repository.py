@@ -82,7 +82,7 @@ class BlogRepository:
                     if cached_blogs:
                         return RepositoryResponse(
                             success=True,
-                            message="Blogs retrieved successfully",
+                            message="Blogs retrieved successfully (cached)",
                             data=cached_blogs
                         )
                 except Exception:
@@ -102,14 +102,15 @@ class BlogRepository:
             if date_to:
                 queryset = queryset.filter(created_at__lte=date_to)
                 
-            blogs = queryset.order_by('-created_at')
+            blogs = list(queryset.order_by('-created_at'))
             
-            # Try to cache (fail gracefully)
+            # Try to cache (fail gracefully) - convert to list for caching
             if published_only and not category_slug and not date_from and not date_to:
                 try:
                     cache.set('blogs:published', blogs, timeout=900)
-                except Exception:
-                    pass  # Continue without caching
+                    logger.info(f"Cached {len(blogs)} published blogs")
+                except Exception as e:
+                    logger.warning(f"Failed to cache blogs: {str(e)}")
             
             return RepositoryResponse(
                 success=True,

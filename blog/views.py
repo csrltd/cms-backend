@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from blog.service.blog_service import BlogService
 from blog.serializers import BlogSerializer, BlogListSerializer, CategorySerializer
 from blog.models import Category
+from blog.repository.category_repository import CategoryRepository
 
 
 @api_view(['GET', 'POST'])
@@ -108,9 +109,18 @@ def blog_detail(request, slug):
 @api_view(['GET'])
 def category_list(request):
     """List all categories"""
-    categories = Category.objects.all().order_by('name')
-    serializer = CategorySerializer(categories, many=True)
-    return Response(serializer.data)
+    
+    repository = CategoryRepository()
+    repo_response = repository.list_all()
+    
+    if repo_response.success:
+        serializer = CategorySerializer(repo_response.data, many=True)
+        return Response(serializer.data)
+    
+    return Response({
+        'success': repo_response.success,
+        'message': repo_response.message
+    }, status=500)
 
 
 @api_view(['GET'])
