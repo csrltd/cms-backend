@@ -1,15 +1,29 @@
 #!/bin/bash
+set -e
 
-# Wait for database
 echo "Waiting for database..."
-until python -c "import psycopg2; psycopg2.connect(host='db', port=5432, user='cms_user', password='secure_password_123', dbname='cms_backend')" 2>/dev/null; do
+
+until python - <<EOF
+import psycopg2
+import os
+
+psycopg2.connect(
+    dbname=os.environ["DB_NAME"],
+    user=os.environ["DB_USER"],
+    password=os.environ["DB_PASSWORD"],
+    host=os.environ["DB_HOST"],
+    port=os.environ.get("DB_PORT", 5432),
+)
+EOF
+do
   echo "Database not ready, waiting..."
   sleep 2
 done
+
 echo "Database started"
 
 # Run migrations
-python manage.py migrate
+python manage.py migrate --noinput
 
 # Collect static files
 python manage.py collectstatic --noinput
@@ -20,5 +34,7 @@ if [ "$1" = "celery" ]; then
 elif [ "$1" = "celery-beat" ]; then
     celery -A core beat --loglevel=info
 else
-    gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    gunicorn core.wsgi:application \
+        --bind 0.0.0.0:8000 \
+        --workers 3
 fi
