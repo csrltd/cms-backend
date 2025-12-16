@@ -35,6 +35,12 @@ def blog_list_create(request):
                 'message': 'Authentication required'
             }, status=401)
         
+        if request.user.user_type != 'admin':
+            return Response({
+                'success': False,
+                'message': 'Admin access required'
+            }, status=403)
+        
         serializer = BlogSerializer(data=request.data)
         if serializer.is_valid():
             service_response = service.create_blog(serializer.validated_data)
@@ -73,6 +79,12 @@ def blog_detail(request, slug):
                 'message': 'Authentication required'
             }, status=401)
         
+        if request.user.user_type != 'admin':
+            return Response({
+                'success': False,
+                'message': 'Admin access required'
+            }, status=403)
+        
         serializer = BlogSerializer(data=request.data)
         if serializer.is_valid():
             service_response = service.update_blog(slug, serializer.validated_data)
@@ -96,6 +108,12 @@ def blog_detail(request, slug):
                 'success': False,
                 'message': 'Authentication required'
             }, status=401)
+        
+        if request.user.user_type != 'admin':
+            return Response({
+                'success': False,
+                'message': 'Admin access required'
+            }, status=403)
         
         service_response = service.delete_blog(slug)
         if service_response.success:

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import sys
 from pathlib import Path
 from decouple import config
+from datetime import timedelta
 from loguru import logger
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -42,11 +43,13 @@ INSTALLED_APPS = [
     'storages',
     'django_ckeditor_5',
     'rest_framework',
+    'rest_framework_simplejwt',
     'drf_spectacular',
     'base',
     'api',
     'blog',
     'contact',
+    'account',
 ]
 
 MIDDLEWARE = [
@@ -191,9 +194,22 @@ else:
     # Development: Log to file
     logger.add("logs/app.log", rotation="1 MB", retention="7 days", level="ERROR")
 
+# Custom User Model
+AUTH_USER_MODEL = 'account.User'
+
 # Django REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+# JWT Configuration
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=config('JWT_ACCESS_TOKEN_LIFETIME_MINUTES', default=15, cast=int)),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=config('JWT_REFRESH_TOKEN_LIFETIME_DAYS', default=7, cast=int)),
+    'ROTATE_REFRESH_TOKENS': True,
 }
 
 # Spectacular (Swagger) Configuration
