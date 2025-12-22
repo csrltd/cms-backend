@@ -23,6 +23,9 @@ done
 echo "Database started"
 
 # Run migrations
+
+python manage.py migrate account
+
 python manage.py migrate --noinput
 
 # Collect static files
