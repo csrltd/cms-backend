@@ -55,7 +55,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    "corsheaders.middleware.CorsMiddleware", 
     "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -247,7 +246,8 @@ else:
 
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
-    cast=lambda v: [i.strip() for i in v.split(",")]
+    default="http://localhost:3000,http://localhost:5173",
+    cast=lambda v: [i.strip() for i in v.split(",") if i]
 )
 
 CSRF_TRUSTED_ORIGINS = config(
