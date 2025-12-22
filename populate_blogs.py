@@ -25,7 +25,7 @@ import os
 import sys
 import django
 import random
-from datetime import datetime, timedelta
+from datetime import timedelta
 from pathlib import Path
 
 # Setup Django environment
@@ -33,6 +33,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
 
+from django.utils import timezone
 from django.utils.text import slugify
 from django.core.files.base import ContentFile
 from blog.models import Blog, Category
@@ -315,7 +316,7 @@ def create_blogs(num_blogs=20, categories=None, clear=False, no_images=False):
         
         # Randomly adjust created_at date (within last 90 days)
         days_ago = random.randint(0, 90)
-        blog.created_at = datetime.now() - timedelta(days=days_ago)
+        blog.created_at = timezone.now() - timedelta(days=days_ago)
         blog.save()
         
         status = "✓ Published" if is_published else "○ Draft"
