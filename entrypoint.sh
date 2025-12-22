@@ -24,9 +24,9 @@ echo "Database started"
 
 # Run migrations
 
-python manage.py migrate account
+python manage.py migrate account --noinput
 
-python manage.py migrate --noinput
+# python manage.py migrate --noinput
 
 # Collect static files
 python manage.py collectstatic --noinput
