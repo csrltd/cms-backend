@@ -4,7 +4,7 @@ from base.models import BaseModel
 
 class Category(BaseModel):
     name = models.CharField(max_length=100)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, max_length=255)
     description = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -15,7 +15,7 @@ class Category(BaseModel):
 
 class Blog(BaseModel):
     title = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, max_length=255)
     short_description = models.TextField()
     content = CKEditor5Field('Text', config_name='default')
     thumbnail = models.ImageField(upload_to='blog/thumbnails/')
