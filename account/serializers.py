@@ -8,7 +8,10 @@ class RegisterSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'password', 'user_type']
+        fields = ['email', 'first_name', 'last_name', 'password']
+        # NOTE: user_type is NOT included for security reasons
+        # Users are created as 'user' type by default
+        # Only superusers can create admin users through Django admin
         
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():

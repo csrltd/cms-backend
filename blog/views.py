@@ -1,12 +1,14 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from blog.service.blog_service import BlogService
 from blog.serializers import BlogSerializer, BlogListSerializer, CategorySerializer
 from blog.models import Category
 from blog.repository.category_repository import CategoryRepository
+from account.permissions import IsAdminOrReadOnly
 
 
 @api_view(['GET', 'POST'])
+@permission_classes([IsAdminOrReadOnly])
 def blog_list_create(request):
     service = BlogService()
     if request.method == 'GET':
@@ -29,18 +31,7 @@ def blog_list_create(request):
         }, status=service_response.status)
         
     elif request.method == 'POST':
-        if not request.user.is_authenticated:
-            return Response({
-                'success': False,
-                'message': 'Authentication required'
-            }, status=401)
-        
-        if request.user.user_type != 'admin':
-            return Response({
-                'success': False,
-                'message': 'Admin access required'
-            }, status=403)
-        
+        # Permission class already ensures user is authenticated and is admin
         serializer = BlogSerializer(data=request.data)
         if serializer.is_valid():
             service_response = service.create_blog(serializer.validated_data)
@@ -60,6 +51,7 @@ def blog_list_create(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAdminOrReadOnly])
 def blog_detail(request, slug):
     service = BlogService()
     if request.method == 'GET':
@@ -73,18 +65,7 @@ def blog_detail(request, slug):
         }, status=service_response.status)
     
     elif request.method == 'PUT':
-        if not request.user.is_authenticated:
-            return Response({
-                'success': False,
-                'message': 'Authentication required'
-            }, status=401)
-        
-        if request.user.user_type != 'admin':
-            return Response({
-                'success': False,
-                'message': 'Admin access required'
-            }, status=403)
-        
+        # Permission class already ensures user is authenticated and is admin
         serializer = BlogSerializer(data=request.data)
         if serializer.is_valid():
             service_response = service.update_blog(slug, serializer.validated_data)
@@ -103,18 +84,7 @@ def blog_detail(request, slug):
         }, status=400)
     
     elif request.method == 'DELETE':
-        if not request.user.is_authenticated:
-            return Response({
-                'success': False,
-                'message': 'Authentication required'
-            }, status=401)
-        
-        if request.user.user_type != 'admin':
-            return Response({
-                'success': False,
-                'message': 'Admin access required'
-            }, status=403)
-        
+        # Permission class already ensures user is authenticated and is admin
         service_response = service.delete_blog(slug)
         if service_response.success:
             return Response(status=service_response.status)

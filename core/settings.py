@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'drf_spectacular',
+    'corsheaders',
     'base',
     'api',
     'blog',
@@ -56,6 +57,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -259,3 +261,11 @@ CELERY_RESULT_SERIALIZER = 'json'
 POSTMARK_API_KEY = config('POSTMARK_API_KEY', default='')
 ADMIN_EMAIL = config('ADMIN_EMAIL', default='admin@yourdomain.com')
 FROM_EMAIL = config('FROM_EMAIL', default='noreply@yourdomain.com')
+
+# CORS Configuration
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://localhost:3000,http://localhost:5173',
+    cast=lambda v: [i.strip() for i in v.split(',') if i]
+)
+CORS_ALLOW_CREDENTIALS = True

@@ -97,3 +97,19 @@ CMS Backend Team
             
     except Exception as e:
         logger.error(f"Error sending welcome email: {str(e)}")
+
+
+@shared_task
+def cleanup_expired_otps():
+    """
+    Periodic task to clean up expired and old used OTP tokens
+    Should be run daily or every few hours via Celery Beat
+    """
+    try:
+        from account.service.otp_service import OTPService
+        deleted_count = OTPService.cleanup_expired_otps()
+        logger.info(f"OTP cleanup task completed: {deleted_count} tokens deleted")
+        return deleted_count
+    except Exception as e:
+        logger.error(f"Error in OTP cleanup task: {str(e)}")
+        return 0

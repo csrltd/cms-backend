@@ -14,13 +14,17 @@ class AccountService:
             if not repo_response.success:
                 return APIResponse(False, repo_response.message, status=400)
             
+            user = repo_response.data['user']
+            otp_code = repo_response.data.get('otp_code')
+            
             # Send OTP email
-            self.send_otp_email(repo_response.data)
+            if otp_code:
+                self.send_otp_email(user, otp_code)
             
             return APIResponse(
                 True, 
-                "Account created successfully",
-                {"user_id": repo_response.data.id, "email": repo_response.data.email},
+                "Account created successfully. Please check your email for verification code.",
+                {"user_id": user.id, "email": user.email},
                 201
             )
         except Exception as e:
@@ -63,8 +67,12 @@ class AccountService:
             if not repo_response.success:
                 return APIResponse(False, repo_response.message, status=400)
             
+            user = repo_response.data['user']
+            otp_code = repo_response.data.get('otp_code')
+            
             # Send new OTP email
-            self.send_otp_email(repo_response.data)
+            if otp_code:
+                self.send_otp_email(user, otp_code)
             
             return APIResponse(True, "Verification code sent")
         except Exception as e:
@@ -98,10 +106,11 @@ class AccountService:
             logger.error(f"Error logging in user: {str(e)}")
             return APIResponse(False, "Authentication failed", status=500)
 
-    def send_otp_email(self, user):
+    def send_otp_email(self, user, otp_code):
+        """Send OTP email - accepts otp_code as parameter"""
         try:
             from account.tasks import send_otp_email_task
-            send_otp_email_task.delay(user.id, user.otp_code)
+            send_otp_email_task.delay(user.id, otp_code)
         except Exception as e:
             logger.warning(f"Failed to queue OTP email: {str(e)}")
 

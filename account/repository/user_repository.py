@@ -1,33 +1,36 @@
 from django.contrib.auth import authenticate
 from django.utils import timezone
 from datetime import timedelta
-import random
 from loguru import logger
 from base.responses import RepositoryResponse
 from account.models import User
+from account.service.otp_service import OTPService
 
 
 class UserRepository:
     def create_user(self, data):
         try:
-            # Generate OTP
-            otp_code = str(random.randint(100000, 999999))
-            otp_expires_at = timezone.now() + timedelta(minutes=10)
-            
+            # Create user without OTP fields
             user = User.objects.create_user(
                 email=data['email'],
                 first_name=data['first_name'],
                 last_name=data['last_name'],
                 password=data['password'],
                 user_type=data.get('user_type', 'user'),
-                is_verified=False,
-                otp_code=otp_code,
-                otp_expires_at=otp_expires_at
+                is_verified=False
             )
+            
+            # Generate OTP using OTP service
+            otp_code, otp_token = OTPService.create_otp(user, 'email_verification')
+            
+            if not otp_code:
+                # If OTP creation failed, still return user but log warning
+                logger.warning(f"Failed to create OTP for {user.email}")
+            
             return RepositoryResponse(
                 success=True,
                 message="User created successfully",
-                data=user
+                data={'user': user, 'otp_code': otp_code}
             )
         except Exception as e:
             logger.error(f"Error creating user: {str(e)}")
@@ -46,28 +49,22 @@ class UserRepository:
                     message="User already verified"
                 )
             
-            if user.otp_code != otp_code:
+            # Use OTP service to verify
+            otp_response = OTPService.verify_otp(user, otp_code, 'email_verification')
+            
+            if otp_response.success:
+                # Mark user as verified
+                user.is_verified = True
+                user.save(update_fields=['is_verified'])
+                
                 return RepositoryResponse(
-                    success=False,
-                    message="Invalid OTP code"
+                    success=True,
+                    message="User verified successfully",
+                    data=user
                 )
-            
-            if user.otp_expires_at < timezone.now():
-                return RepositoryResponse(
-                    success=False,
-                    message="OTP code expired"
-                )
-            
-            user.is_verified = True
-            user.otp_code = None
-            user.otp_expires_at = None
-            user.save()
-            
-            return RepositoryResponse(
-                success=True,
-                message="User verified successfully",
-                data=user
-            )
+            else:
+                return otp_response
+                
         except User.DoesNotExist:
             return RepositoryResponse(
                 success=False,
@@ -90,17 +87,19 @@ class UserRepository:
                     message="User already verified"
                 )
             
-            otp_code = str(random.randint(100000, 999999))
-            otp_expires_at = timezone.now() + timedelta(minutes=10)
+            # Generate new OTP using OTP service
+            otp_code, otp_token = OTPService.create_otp(user, 'email_verification')
             
-            user.otp_code = otp_code
-            user.otp_expires_at = otp_expires_at
-            user.save()
+            if not otp_code:
+                return RepositoryResponse(
+                    success=False,
+                    message="Please wait before requesting a new OTP"
+                )
             
             return RepositoryResponse(
                 success=True,
                 message="New OTP generated successfully",
-                data=user
+                data={'user': user, 'otp_code': otp_code}
             )
         except User.DoesNotExist:
             return RepositoryResponse(
