@@ -12,6 +12,7 @@ Options:
     --blogs=N         Number of blog posts to create (default: 20)
     --categories=N    Number of categories to create (default: 5)
     --clear           Delete all existing blogs and categories before creating new ones
+    --no-images       Skip thumbnail generation (useful for restricted S3/R2 permissions)
     --help            Show this help message
 
 Examples:
@@ -233,7 +234,7 @@ def create_categories(num_categories=5, clear=False):
     return categories
 
 
-def create_blogs(num_blogs=20, categories=None, clear=False):
+def create_blogs(num_blogs=20, categories=None, clear=False, no_images=False):
     """Create sample blog posts"""
     if clear:
         print("\n🗑️  Clearing existing blogs...")
@@ -286,8 +287,13 @@ def create_blogs(num_blogs=20, categories=None, clear=False):
         # Random publish status (80% published)
         is_published = random.random() < 0.8
         
-        # Create thumbnail
-        thumbnail = create_thumbnail()
+        # Create thumbnail (if requested)
+        thumbnail = None
+        if not no_images:
+            try:
+                thumbnail = create_thumbnail()
+            except Exception as e:
+                print(f"  ⚠️  Failed to generate image memory buffer: {e}")
         
         # Create blog
         blog = Blog.objects.create(
@@ -299,8 +305,13 @@ def create_blogs(num_blogs=20, categories=None, clear=False):
             is_published=is_published,
         )
         
-        # Save thumbnail
-        blog.thumbnail.save(f'blog_{blog.id}.jpg', thumbnail, save=True)
+        # Save thumbnail if generated
+        if thumbnail:
+            try:
+                blog.thumbnail.save(f'blog_{blog.id}.jpg', thumbnail, save=True)
+            except Exception as img_err:
+                print(f"  ⚠️  Storage Error: Could not save thumbnail for '{title}'.")
+                print(f"      Verify S3/R2 HeadObject permissions. Skipping image...")
         
         # Randomly adjust created_at date (within last 90 days)
         days_ago = random.randint(0, 90)
@@ -353,8 +364,12 @@ def main():
     parser.add_argument('--blogs', type=int, default=20, help='Number of blogs to create (default: 20)')
     parser.add_argument('--categories', type=int, default=5, help='Number of categories to create (default: 5)')
     parser.add_argument('--clear', action='store_true', help='Clear existing data before creating new')
+    parser.add_argument('--no-images', action='store_true', help='Skip thumbnail generation')
     
     args = parser.parse_args()
+    
+    # Pass flag to create_blogs via categories list attribute (quick hack)
+    # or better, just pass it to the function
     
     print("="*60)
     print("🚀 BLOG POPULATION SCRIPT")
@@ -365,7 +380,7 @@ def main():
         categories = create_categories(args.categories, clear=args.clear)
         
         # Create blogs
-        create_blogs(args.blogs, categories, clear=args.clear)
+        create_blogs(args.blogs, categories, clear=args.clear, no_images=args.no_images)
         
         # Show statistics
         show_stats()
