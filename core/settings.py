@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import sys
 from pathlib import Path
 from decouple import config
+from datetime import timedelta
 from loguru import logger
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -42,11 +43,14 @@ INSTALLED_APPS = [
     'storages',
     'django_ckeditor_5',
     'rest_framework',
+    'rest_framework_simplejwt',
     'drf_spectacular',
+    'corsheaders',
     'base',
     'api',
     'blog',
     'contact',
+    'account',
     "corsheaders",
 ]
 
@@ -55,6 +59,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware", 
     "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -193,9 +198,22 @@ else:
     # Development: Log to file
     logger.add("logs/app.log", rotation="1 MB", retention="7 days", level="ERROR")
 
+# Custom User Model
+AUTH_USER_MODEL = 'account.User'
+
 # Django REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+# JWT Configuration
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=config('JWT_ACCESS_TOKEN_LIFETIME_MINUTES', default=15, cast=int)),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=config('JWT_REFRESH_TOKEN_LIFETIME_DAYS', default=7, cast=int)),
+    'ROTATE_REFRESH_TOKENS': True,
 }
 
 # Spectacular (Swagger) Configuration
@@ -251,3 +269,11 @@ CELERY_RESULT_SERIALIZER = 'json'
 POSTMARK_API_KEY = config('POSTMARK_API_KEY', default='')
 ADMIN_EMAIL = config('ADMIN_EMAIL', default='admin@yourdomain.com')
 FROM_EMAIL = config('FROM_EMAIL', default='noreply@yourdomain.com')
+
+# CORS Configuration
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://localhost:3000,http://localhost:5173',
+    cast=lambda v: [i.strip() for i in v.split(',') if i]
+)
+CORS_ALLOW_CREDENTIALS = True

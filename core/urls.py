@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/', include('api.urls.blog')),
     path('api/', include('api.urls.contact')),
     path('api/', include('api.urls.category')),
+    path('api/', include('api.urls.account')),
     path('ckeditor5/', include('django_ckeditor_5.urls')),
     # API Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
