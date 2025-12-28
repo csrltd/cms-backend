@@ -1,32 +1,93 @@
-__pycache__
-*.pyc
-*.pyo
-*.pyd
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 .Python
-env
-pip-log.txt
-pip-delete-this-directory.txt
-.tox
+
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing
+.tox/
 .coverage
 .coverage.*
 .cache
 nosetests.xml
 coverage.xml
 *.cover
-*.log
-.git
-.mypy_cache
-.pytest_cache
-.hypothesis
+.hypothesis/
+.pytest_cache/
+htmlcov/
 
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
-.vscode
 
-README.md
-docker-compose.yml
-Dockerfile
-.dockerignore
+# Git
+.git/
 .gitignore
+.gitattributes
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Docker
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+Dockerfile.*
+.dockerignore
+
+# Environment
 .env
+.env.*
+!.env.example
+
+# Django
 db.sqlite3
+db.sqlite3-journal
 logs/
+staticfiles/
+media/
+*.log
+local_settings.py
+
+# Test files
+tests/
+*_test.py
+test_*.py
+
+# Misc
+*.bak
+*.tmp
+.DS_Store
